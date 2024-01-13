@@ -62,6 +62,34 @@ class ValueIterationAgent(ValueEstimationAgent):
     def runValueIteration(self):
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
+        #numarul de iteratii pentru a gasi utilitatea fiecaror stari.
+        iterations = self.iterations
+        for _ in range(iterations):
+            #vector de utilitati pentru fiecare stare din mdp.
+            utilities = self.values.copy()
+            #mdp Markov decisition process = problema de decizii succesive pentru un mediu inconjurator complet observabil
+            #(se cunosc toate starile, stim tot timpul in ce stare ne aflam), cu un model de tranzitie markovian(problabilitatea de a trece dintr-o
+            #stare in alta depinde doar de starea in care ne aflam si nu de starile anterioare), cu recompense.
+            #pentru fiecare stare 
+            
+
+            #self.mdp.getStates() - toate starile in care putem ajunge din starea curenta.
+            states = self.mdp.getStates()
+            for state in states:
+                values = [float('-inf')] # initializam cu cea mai mica valoare
+                terminal_state = self.mdp.isTerminal(state)  # boolean
+                # Terminal states have 0 value.
+                if terminal_state:
+                    utilities[state] = 0
+                else:
+                    legal_actions = self.mdp.getPossibleActions(state)
+                    #pentru fiecare actiune posibila calculam value
+                    for action in legal_actions:
+                        values.append(self.getQValue(state, action))
+                    # update value function at state s to largest Q_value
+                    utilities[state] = max(values)  #utilitarea starii este maximul utilitatilor starilor in care putem ajunge din starea in care suntem
+
+            self.values = utilities
 
 
     def getValue(self, state):
@@ -76,8 +104,16 @@ class ValueIterationAgent(ValueEstimationAgent):
           Compute the Q-value of action in state from the
           value function stored in self.values.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        nextStatesAndProbs = self.mdp.getTransitionStatesAndProbs(state, action) # returneaza starile in care putem ajunge din starea curenta si probabilitatile
+        
+        #utilitatile starilor in care putem ajunge din starea curenta
+        utilities = []
+        for nextState, probability in nextStatesAndProbs:
+            reward = self.mdp.getReward(state, action, nextState) # recompensa starii urmatoare stiind ca venim din starea curenta cu actiunea specificate
+            nestStatesSum = self.discount * self.values[nextState]
+            utilities.append(probability * (reward + nestStatesSum))
+
+        return sum(utilities) # returnam suma ponderata a utilitatilor starilor urmatoare de probabilitatea de a ajunge in acele stari
 
     def computeActionFromValues(self, state):
         """
@@ -89,7 +125,21 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        possibleActions = self.mdp.getPossibleActions(state)
+
+        #daca nu exista actiuni posibile ne oprim
+        if len(possibleActions) == 0:
+            return None
+
+        actions_sums = []
+
+        for action in possibleActions:
+            sum = self.getQValue(state, action)
+            actions_sums.append((action, sum))
+
+        maxSum = max(actions_sums, key=lambda x: x[1])[0] #returnam actiunea care are cea mai mare suma 
+        return maxSum
+    
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
