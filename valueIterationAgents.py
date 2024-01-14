@@ -171,4 +171,58 @@ class PrioritizedSweepingValueIterationAgent(ValueIterationAgent):
 
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
+        states = self.mdp.getStates()
+        priorityQueue = util.PriorityQueue()
+        predecessors = {}
+
+
+        #initializam utilitatile fiecarei stari cu 0 si ii determinam predecesorii
+        for s in states:
+            self.values[s] = 0
+            predecessors[s] = self.getPredecessors(s)
+
+        for s in states:
+            isTerminal = self.mdp.isTerminal(s)
+            if not isTerminal:
+                stateUtility = self.values[s]
+                diff = abs(stateUtility - self.maxQvalue(s))
+                priorityQueue.push(s, -diff)
+
+        for _ in range(self.iterations):
+
+            if priorityQueue.isEmpty():
+                return
+
+            s = priorityQueue.pop()
+            self.values[s] = self.maxQvalue(s)
+
+            for p in predecessors[s]:
+                diff = abs(self.values[p] - self.maxQvalue(p))
+                if diff > self.theta:
+                    priorityQueue.update(p, -diff)
+
+
+    def maxQvalue(self, state):
+        return max([self.getQValue(state, a) for a in self.mdp.getPossibleActions(state)])
+
+
+    def getPredecessors(self, state):
+        predecessors = set()
+        states = self.mdp.getStates()
+        movements = ['north', 'south', 'east', 'west']
+
+        if not self.mdp.isTerminal(state):
+            for state_ in states:
+                isTerminal = self.mdp.isTerminal(state_)
+                legalActions = self.mdp.getPossibleActions(state_)
+
+                if not isTerminal:
+                    for move in movements:
+                        if move in legalActions:
+                            transition = self.mdp.getTransitionStatesAndProbs(state_, move)
+                            for s_prime, probability in transition:
+                                if (s_prime == state) and (probability > 0):
+                                    predecessors.add(state_)
+
+        return predecessors
 
