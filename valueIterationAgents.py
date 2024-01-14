@@ -177,9 +177,10 @@ class PrioritizedSweepingValueIterationAgent(ValueIterationAgent):
 
 
         #initializam utilitatile fiecarei stari cu 0 si ii determinam predecesorii
+        #implementarea algoritmului https://inst.eecs.berkeley.edu/~cs188/fa18/project3.html#Q5
         for s in states:
             self.values[s] = 0
-            predecessors[s] = self.getPredecessors(s)
+            predecessors[s] = self.getPredecessors(s) 
 
         for s in states:
             isTerminal = self.mdp.isTerminal(s)
@@ -203,25 +204,25 @@ class PrioritizedSweepingValueIterationAgent(ValueIterationAgent):
 
 
     def maxQvalue(self, state):
-        return max([self.getQValue(state, a) for a in self.mdp.getPossibleActions(state)])
+        return max([self.getQValue(state, a) for a in self.mdp.getPossibleActions(state)]) #returnam max utility pentru o stare
 
 
     def getPredecessors(self, state):
-        predecessors = set()
-        states = self.mdp.getStates()
-        movements = ['north', 'south', 'east', 'west']
+        predecessors = set()#locul unde stocam predecesorii
+        states = self.mdp.getStates() #toate starile din mdp
+        movements = ['north', 'south', 'east', 'west']#actiunile posibile
 
         if not self.mdp.isTerminal(state):
             for state_ in states:
-                isTerminal = self.mdp.isTerminal(state_)
-                legalActions = self.mdp.getPossibleActions(state_)
+                isTerminal = self.mdp.isTerminal(state_) #verificam daca ii stare terminala
+                legalActions = self.mdp.getPossibleActions(state_)# ii extragem miscarile posibile
 
                 if not isTerminal:
                     for move in movements:
                         if move in legalActions:
-                            transition = self.mdp.getTransitionStatesAndProbs(state_, move)
+                            transition = self.mdp.getTransitionStatesAndProbs(state_, move)#starile in care putem ajunge din starea curenta si probabilitatea de a ajunge in ea.
                             for s_prime, probability in transition:
-                                if (s_prime == state) and (probability > 0):
+                                if (s_prime == state) and (probability > 0):#daca starea in care ajungem este starea tinta atunci starea din care venim este predecesor
                                     predecessors.add(state_)
 
         return predecessors
